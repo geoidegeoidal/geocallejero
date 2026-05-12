@@ -275,8 +275,8 @@ python -m pytest geocallejero/tests/test_osm_provider.py -v
 |------|-----------|--------|
 | **Fase 1** | Core de Normalización y Parser NLP | ✅ Completado |
 | **Fase 2** | Provider OSM y Caché GPKG | ✅ Completado |
-| **Fase 3** | Motor de Matching, Índices e Interpolación Lineal | 🔨 En progreso |
-| **Fase 4** | UI Premium (Wizard) y Orquestador QgsTask | ⏳ Pendiente |
+| **Fase 3** | Motor de Matching, Índices e Interpolación Lineal | ✅ Completado |
+| **Fase 4** | UI Premium (Wizard) y Orquestador QgsTask | ✅ Completado |
 
 ---
 
