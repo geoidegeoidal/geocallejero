@@ -7,13 +7,13 @@ import os
 
 
 class GeoCallejeroPlugin:
-    """Plugin QGIS: GeoCallejero — Geocodificador Chileno de Direcciones."""
+    """Plugin QGIS: Geocallejero CL — Geocodificador Chileno de Direcciones."""
 
     def __init__(self, iface):
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
         self.actions = []
-        self.menu_name = "GeoCallejero"
+        self.menu_name = "Geocallejero CL"
         self.dialog = None
 
     def initGui(self):
@@ -23,7 +23,7 @@ class GeoCallejeroPlugin:
         else:
             icon = QIcon()
 
-        action = QAction(icon, "GeoCallejero", self.iface.mainWindow())
+        action = QAction(icon, "Geocallejero CL", self.iface.mainWindow())
         action.triggered.connect(self.run)
         action.setEnabled(True)
 

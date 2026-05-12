@@ -1,5 +1,5 @@
 [general]
-name=GeoCallejero
+name=Geocallejero CL
 qgisMinimumVersion=3.34
 qgisMaximumVersion=4.99
 description=Geocodificador híbrido chileno: interpola direcciones sobre el Maestro de Calles, consulta OSM (PBF) y aplica fallback por centroide. Normalizador NLP para inputs sucios (Av., Pje., N°) y generación de layers con score de confianza.

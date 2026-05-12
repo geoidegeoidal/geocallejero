@@ -1,11 +1,11 @@
-# GeoCallejero — Geocodificador Híbrido Chileno para QGIS
+# Geocallejero CL — Geocodificador Híbrido Chileno para QGIS
 
-**GeoCallejero** es un plugin robusto para QGIS (compatible con 3.34 LTR y 4.x) que permite geocodificar masivamente listados de direcciones chilenas (CSV/XLSX) con la mayor precisión posible sin depender de servicios web ni APIs externas, garantizando la **privacidad total** de tus datos.
+**Geocallejero CL** es un plugin robusto para QGIS (compatible con 3.34 LTR y 4.x) que permite geocodificar masivamente listados de direcciones chilenas (CSV/XLSX) con la mayor precisión posible sin depender de servicios web ni APIs externas, garantizando la **privacidad total** de tus datos.
 
 Creado por **Jorge Ulloa Roa** (jorge.ulloa.roa@gmail.com).
 
 ## 🚀 Estrategia Híbrida de 3 Niveles
-GeoCallejero no falla fácilmente. Emplea un motor en cascada para maximizar la tasa de éxito:
+Geocallejero CL no falla fácilmente. Emplea un motor en cascada para maximizar la tasa de éxito:
 
 1. **Maestro de Calles (Interpolación Lineal)**: Si la dirección tiene numeración, el motor verifica la paridad (izquierda/derecha) usando los rangos oficiales (`INI_IZQ`, `TER_DER`, etc.) e interpola matemáticamente la geometría.
 2. **OpenStreetMap PBF (Match Exacto)**: Si la numeración no está disponible en los rangos del Maestro, se busca complementariamente el nodo exacto en OSM usando `addr:housenumber`.

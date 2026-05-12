@@ -539,7 +539,7 @@ class MainDialog(QDialog):
     def __init__(self, iface, parent=None):
         super().__init__(parent)
         self.iface = iface
-        self.setWindowTitle("GeoCallejero — Geocodificador Chileno")
+        self.setWindowTitle("Geocallejero CL — Geocodificador Chileno")
         self.setMinimumSize(650, 520)
         self.resize(700, 580)
 
