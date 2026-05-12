@@ -1,0 +1,5 @@
+Para el cálculo del  campo denominado LARGO_MTS, que corresponde a la longitud de los ejes viales en metros, se llevaron a cabo los siguientes pasos:
+
+1.- Reproyección de la capa original desde GCS SIRGAS 2000 a WGS 1984 UTM 18 Sur.
+2.- Cálculo de longitud de ejes en metros en el campo LARGO_MTS.
+3.- Se reproyectó la capa a su proyección original GCS SIRGAS 2000.

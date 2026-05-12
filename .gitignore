@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+*.so
+dist/
+build/
+*.spec
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# QGIS
+*.qgs~
+*.qgz~
+
+# OSM Cache (binarios grandes)
+*.gpkg
+*.sha256
+
+# Maestro de Calles (datos INE, no incluidos en el repo)
+Maestro_de_Calles_2022.*
+diccionario-variables-maestro-de-calles-2022.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
