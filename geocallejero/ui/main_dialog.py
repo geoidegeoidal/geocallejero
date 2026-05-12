@@ -30,6 +30,8 @@ from geocallejero.io.reader import read_file
 from geocallejero.core.osm_provider import OsmProvider
 from geocallejero.core.geocoder import GeocodingTask
 from geocallejero.io.writer import create_output_layer, write_results
+from geocallejero.core.downloader import DownloadTask, has_data, get_data_dir, get_maestro_path, get_osm_path
+
 
 try:
     from qgis.core import QgsTaskManager, QgsApplication, QgsVectorLayer
@@ -303,78 +305,50 @@ class Step1Data(WizardStep):
 
 
 class Step2Sources(WizardStep):
-    """Paso 2: Selección de fuentes de datos (Maestro de Calles, OSM PBF)."""
+    """Paso 2: Descarga y validación automática de datos base."""
+
+    # URL Fija para el repositorio en GitHub Releases
+    DOWNLOAD_URL = "https://github.com/geoidegeoidal/geocallejero/releases/download/v1.0.0/datos_base.zip"
 
     def __init__(self, parent=None):
         super().__init__(
-            "Paso 2: Configurar Fuentes",
-            "Seleccione las fuentes de datos para la geocodificación.",
+            "Paso 2: Datos Base del Geocodificador",
+            "El sistema requiere datos espaciales (Maestro de Calles y OSM) para funcionar.",
             parent,
         )
-
-        self.maestro_path: Optional[str] = None
-        self.pbf_path: Optional[str] = None
-        self.use_osm = True
-
+        self.download_task = None
         self._build_ui()
+        self.check_local_data()
 
     def _build_ui(self):
-        osm_group = QGroupBox("OpenStreetMap (PBF)")
-        osm_layout = QFormLayout()
+        self.status_group = QGroupBox("Estado de Datos Locales")
+        status_layout = QVBoxLayout()
 
-        self.osm_check = QComboBox()
-        self.osm_check.addItem("Sí — Usar OSM como fuente")
-        self.osm_check.addItem("No — Solo Maestro de Calles")
-        osm_layout.addRow("Habilitar OSM:", self.osm_check)
+        self.status_icon = QLabel("⏳ Evaluando entorno...")
+        self.status_icon.setStyleSheet("font-size: 14px; font-weight: bold; margin-bottom: 10px;")
+        status_layout.addWidget(self.status_icon)
 
-        self.osm_edit = QLineEdit()
-        self.osm_edit.setReadOnly(True)
-        self.osm_edit.setPlaceholderText("Seleccione archivo .osm.pbf...")
+        self.btn_download = QPushButton("Descargar Datos Base (~100 MB)")
+        self.btn_download.setObjectName("primary")
+        self.btn_download.clicked.connect(self._start_download)
+        self.btn_download.setVisible(False)
+        status_layout.addWidget(self.btn_download)
+        
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        status_layout.addWidget(self.progress_bar)
+        
+        self.progress_lbl = QLabel("")
+        self.progress_lbl.setVisible(False)
+        self.progress_lbl.setStyleSheet("color: #7f8c8d; font-size: 11px;")
+        status_layout.addWidget(self.progress_lbl)
 
-        osm_browse = QPushButton("Examinar")
-        osm_browse.setObjectName("secondary")
-        osm_browse.clicked.connect(self._browse_pbf)
-        osm_browse.setFixedWidth(100)
-
-        osm_file_layout = QHBoxLayout()
-        osm_file_layout.addWidget(self.osm_edit)
-        osm_file_layout.addWidget(osm_browse)
-        osm_layout.addRow("Archivo PBF:", osm_file_layout)
-
-        self.osm_status = QLabel("Sin archivo seleccionado")
-        self.osm_status.setStyleSheet("color: #95a5a6;")
-        osm_layout.addRow("Estado:", self.osm_status)
-
-        osm_group.setLayout(osm_layout)
-        self.layout.addWidget(osm_group)
-
-        maestro_group = QGroupBox("Maestro de Calles (SHP)")
-        maestro_layout = QFormLayout()
-
-        self.maestro_edit = QLineEdit()
-        self.maestro_edit.setReadOnly(True)
-        self.maestro_edit.setPlaceholderText("Seleccione shapefile del Maestro de Calles...")
-
-        maestro_browse = QPushButton("Examinar")
-        maestro_browse.setObjectName("secondary")
-        maestro_browse.clicked.connect(self._browse_maestro)
-        maestro_browse.setFixedWidth(100)
-
-        maestro_file_layout = QHBoxLayout()
-        maestro_file_layout.addWidget(self.maestro_edit)
-        maestro_file_layout.addWidget(maestro_browse)
-        maestro_layout.addRow("Shapefile:", maestro_file_layout)
-
-        self.maestro_status = QLabel("Sin archivo seleccionado (opcional)")
-        self.maestro_status.setStyleSheet("color: #95a5a6;")
-        maestro_layout.addRow("Estado:", self.maestro_status)
-
-        maestro_group.setLayout(maestro_layout)
-        self.layout.addWidget(maestro_group)
+        self.status_group.setLayout(status_layout)
+        self.layout.addWidget(self.status_group)
 
         info = QLabel(
-            "Nota: El Maestro de Calles se usará para interpolación lineal y fallback. "
-            "OSM proporciona puntos exactos con addr:housenumber."
+            "Nota: Los datos se guardan en la carpeta de perfil de QGIS y no tendrás que "
+            "volver a descargarlos en el futuro. Esto garantiza total privacidad al geocodificar."
         )
         info.setWordWrap(True)
         info.setStyleSheet("color: #7f8c8d; font-size: 11px; font-style: italic;")
@@ -382,37 +356,64 @@ class Step2Sources(WizardStep):
 
         self.layout.addStretch()
 
-    def _browse_pbf(self):
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Seleccionar archivo OSM PBF", "", "OSM PBF (*.osm.pbf *.pbf);;Todos (*.*)"
-        )
-        if path:
-            self.pbf_path = path
-            self.osm_edit.setText(path)
-            size_mb = os.path.getsize(path) / (1024 * 1024)
-            self.osm_status.setText(f"PBF cargado: {size_mb:.1f} MB")
-            self.osm_status.setStyleSheet("color: #27ae60; font-weight: bold;")
+    def check_local_data(self):
+        """Verifica si ya están descargados los datos base."""
+        if has_data():
+            self.status_icon.setText("✅ Datos Base instalados correctamente.")
+            self.status_icon.setStyleSheet("color: #27ae60; font-size: 14px; font-weight: bold; margin-bottom: 10px;")
+            self.btn_download.setVisible(False)
+            
+            maestro_p = get_maestro_path()
+            osm_p = get_osm_path()
+            
+            paths_info = f"Maestro: {os.path.basename(maestro_p) if maestro_p else 'No encontrado'}\n"
+            paths_info += f"OSM (Caché): {os.path.basename(osm_p) if osm_p else 'No encontrado'}"
+            
+            self.progress_lbl.setText(paths_info)
+            self.progress_lbl.setVisible(True)
+        else:
+            self.status_icon.setText("❌ Faltan los Datos Base locales.")
+            self.status_icon.setStyleSheet("color: #e74c3c; font-size: 14px; font-weight: bold; margin-bottom: 10px;")
+            self.btn_download.setVisible(True)
+            self.progress_lbl.setText(f"Directorio de destino: {get_data_dir()}")
+            self.progress_lbl.setVisible(True)
 
-    def _browse_maestro(self):
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Seleccionar Maestro de Calles SHP", "", "Shapefile (*.shp);;Todos (*.*)"
-        )
-        if path:
-            self.maestro_path = path
-            self.maestro_edit.setText(path)
-            self.maestro_status.setText("Shapefile cargado")
-            self.maestro_status.setStyleSheet("color: #27ae60; font-weight: bold;")
+    def _start_download(self):
+        dest_dir = get_data_dir()
+        self.download_task = DownloadTask(self.DOWNLOAD_URL, dest_dir)
+        
+        self.download_task.progressChanged.connect(self._update_progress)
+        self.download_task.downloadFinished.connect(self._on_download_finished)
+        
+        self.btn_download.setEnabled(False)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(True)
+        
+        QgsApplication.taskManager().addTask(self.download_task)
+
+    def _update_progress(self, percent: int, msg: str):
+        self.progress_bar.setValue(percent)
+        self.progress_lbl.setText(msg)
+
+    def _on_download_finished(self, success: bool, msg: str):
+        self.progress_bar.setVisible(False)
+        if success:
+            QMessageBox.information(self, "Éxito", msg)
+            self.check_local_data()
+        else:
+            self.btn_download.setEnabled(True)
+            QMessageBox.critical(self, "Error de Descarga", msg)
 
     def get_config(self) -> dict:
         return {
-            "use_osm": self.osm_check.currentIndex() == 0,
-            "pbf_path": self.pbf_path,
-            "maestro_path": self.maestro_path,
+            "use_osm": get_osm_path() is not None,
+            "pbf_path": get_osm_path(), # Retornamos el GPKG en lugar del PBF nativo ya procesado
+            "maestro_path": get_maestro_path(),
         }
 
     def is_valid(self) -> bool:
-        if self.osm_check.currentIndex() == 0 and not self.pbf_path:
-            QMessageBox.warning(self, "Error", "Seleccione un archivo PBF de OSM.")
+        if not has_data():
+            QMessageBox.warning(self, "Datos Faltantes", "Debes descargar los datos base antes de continuar.")
             return False
         return True
 
@@ -651,10 +652,19 @@ class MainDialog(QDialog):
 
         if sources_config.get("use_osm") and sources_config.get("pbf_path"):
             try:
-                self.osm_provider = OsmProvider(sources_config["pbf_path"])
-                self.step3.status_label.setText("Cargando índice OSM...")
-                self.osm_provider.load_or_convert()
-                self.osm_provider.build_spatial_index()
+                # Modificamos para aceptar GPKG ya cacheado en lugar del PBF original
+                # Así evitamos que ogr2ogr intente convertir el archivo si ya es GPKG
+                osm_path = sources_config["pbf_path"]
+                if osm_path.endswith('.gpkg'):
+                    self.osm_provider = OsmProvider(osm_path)
+                    self.osm_provider.cache_path = osm_path # Setear cache dictamente
+                    self.osm_provider.build_spatial_index()
+                else:
+                    self.osm_provider = OsmProvider(osm_path)
+                    self.step3.status_label.setText("Cargando índice OSM...")
+                    self.osm_provider.load_or_convert()
+                    self.osm_provider.build_spatial_index()
+                    
                 count = self.osm_provider.feature_count
                 self.step3.status_label.setText(f"Índice OSM cargado: {count:,} puntos")
             except Exception as e:

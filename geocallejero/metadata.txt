@@ -6,8 +6,8 @@ description=Geocodificador híbrido chileno: interpola direcciones sobre el Maes
 about=GeoCallejero es un plugin de QGIS para geocodificación masiva de direcciones chilenas. Utiliza una estrategia de 3 niveles: (1) Maestro de Calles del INE con interpolación lineal por paridad, (2) OpenStreetMap vía archivo PBF convertido a caché GPKG con índice espacial propio, (3) fallback a centroide de calle cuando no hay numeración. Incluye un normalizador NLP ligero que entiende variantes como "Av.", "Pje.", "N°" y limpia texto automáticamente. Diseñado para correr completamente sobre la API nativa de QGIS (QgsTask, QgsSpatialIndex, GDAL/ogr2ogr) sin dependencias externas.
 
 version=0.1.0
-author=GeoIdeoGeoidal
-email=geoidegeoidal@gmail.com
+author=Jorge Ulloa Roa
+email=jorge.ulloa.roa@gmail.com
 
 repository=https://github.com/geoidegeoidal/geocallejero
 tracker=https://github.com/geoidegeoidal/geocallejero/issues
