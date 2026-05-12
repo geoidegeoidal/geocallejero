@@ -17,7 +17,7 @@ class GeoCallejeroPlugin:
         self.dialog = None
 
     def initGui(self):
-        icon_path = os.path.join(self.plugin_dir, "icon.png")
+        icon_path = os.path.join(self.plugin_dir, "icon.svg")
         if os.path.exists(icon_path):
             icon = QIcon(icon_path)
         else:

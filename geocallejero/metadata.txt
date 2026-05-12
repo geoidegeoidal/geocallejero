@@ -14,7 +14,7 @@ tracker=https://github.com/geoidegeoidal/geocallejero/issues
 homepage=https://github.com/geoidegeoidal/geocallejero
 
 category=Plugins
-icon=icon.png
+icon=icon.svg
 tags=geocoding,chile,address,interpolation,osm,streets,maestro-de-calles,direcciones,geocodificacion,normalizacion
 
 experimental=True
