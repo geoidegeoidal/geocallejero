@@ -1,5 +1,5 @@
 # geocallejero/plugin.py
-# Orquestador principal del plugin GeoCallejero (esqueleto para Fase 4)
+# Orquestador principal del plugin GeoCallejero
 
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
@@ -14,6 +14,7 @@ class GeoCallejeroPlugin:
         self.plugin_dir = os.path.dirname(__file__)
         self.actions = []
         self.menu_name = "GeoCallejero"
+        self.dialog = None
 
     def initGui(self):
         icon_path = os.path.join(self.plugin_dir, "icon.png")
@@ -36,8 +37,9 @@ class GeoCallejeroPlugin:
             self.iface.removeToolBarIcon(action)
 
     def run(self):
-        self.iface.messageBar().pushInfo(
-            "GeoCallejero",
-            "Plugin en desarrollo — Fase 1 y 2 completadas. "
-            "Próximamente: UI Wizard y motor de geocodificación.",
-        )
+        if self.dialog is None:
+            from geocallejero.ui.main_dialog import MainDialog
+            self.dialog = MainDialog(self.iface, self.iface.mainWindow())
+        self.dialog.show()
+        self.dialog.raise_()
+        self.dialog.activateWindow()
