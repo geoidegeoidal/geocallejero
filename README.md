@@ -41,6 +41,10 @@ Al terminar, el plugin intenta añadir la capa **`geocallejero_resultados`** al 
 
 ## Alcance y resultados
 
+![Flujo de Geocallejero: dirección y comuna, búsqueda en el Maestro de Calles, interpolación, centroide o sin coincidencia y revisión humana en QGIS.](docs/readme/matching-workflow.svg)
+
+La dirección y la comuna conducen a una búsqueda en el Maestro; el resultado puede ser una interpolación, un centroide o un registro sin geometría. **Todos requieren revisión**, y OSM exacto aún no forma parte del flujo activo. [Fuente editable del diagrama](docs/readme/matching-workflow.html).
+
 El motor normaliza abreviaturas como `Av.`, `Pje.` y `N°`, busca candidatos de calle y aplica la siguiente estrategia:
 
 | Método | Estado actual | Interpretación |
