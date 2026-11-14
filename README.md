@@ -1,36 +1,72 @@
-# Geocallejero CL — Geocodificador Híbrido Chileno para QGIS
+<p align="center">
+  <img src="geocallejero/icon.svg" width="88" alt="Icono de Geocallejero CL">
+</p>
 
-**Geocallejero CL** es un plugin robusto para QGIS (compatible con 3.34 LTR y 4.x) que permite geocodificar masivamente listados de direcciones chilenas (CSV/XLSX) con la mayor precisión posible sin depender de servicios web ni APIs externas, garantizando la **privacidad total** de tus datos.
+# Geocallejero CL
+**Direcciones chilenas → resultados geográficos en QGIS**
 
-Creado por **Jorge Ulloa Roa** (jorge.ulloa.roa@gmail.com).
+Plugin experimental para geocodificar listados CSV/XLSX a partir del **Maestro de Calles**, con normalización de direcciones, interpolación y una capa de resultados para revisar en QGIS.
 
-## 🚀 Estrategia Híbrida de 3 Niveles
-Geocallejero CL no falla fácilmente. Emplea un motor en cascada para maximizar la tasa de éxito:
+**[Instalación](#instalación) · [Primer uso](#primer-uso) · [Alcance y resultados](#alcance-y-resultados) · [Desarrollo](#desarrollo)**
 
-1. **Maestro de Calles (Interpolación Lineal)**: Si la dirección tiene numeración, el motor verifica la paridad (izquierda/derecha) usando los rangos oficiales (`INI_IZQ`, `TER_DER`, etc.) e interpola matemáticamente la geometría.
-2. **OpenStreetMap PBF (Match Exacto)**: Si la numeración no está disponible en los rangos del Maestro, se busca complementariamente el nodo exacto en OSM usando `addr:housenumber`.
-3. **Fallback a Centroide**: Si la calle no posee numeración en ninguna fuente, el sistema se rescata asignando el centroide del segmento vial para que ningún registro quede sin georreferenciación.
+> **Estado:** versión 0.1.0 experimental. La metadata declara QGIS 3.34–4.99; ese rango no sustituye una prueba en tu instalación. La búsqueda exacta de direcciones en OSM aún está pendiente de integración en el motor.
 
-## ✨ Características Principales
-* **100% Offline (Plug & Play)**: El usuario no necesita buscar capas base por la web. El plugin incluye un gestor de descarga integrado que obtiene automáticamente (~124MB) los datos base del *Maestro de Calles* y los aloja seguros en la carpeta de configuración de QGIS.
-* **Normalizador NLP Chileno**: Motor integrado de parseo heurístico de direcciones que entiende, normaliza y limpia textos sucios (ej. `"Av.", "Pje.", "Esq", "N°"`) mitigando tildes y caracteres especiales.
-* **Cero Bloqueos de Interfaz (Async)**: Procesamiento masivo de miles de puntos gestionado vía `QgsTask` en *background threads*, con barra de progreso.
-* **Ciberseguridad Incorporada**: Extracción de archivos en formato Zip totalmente mitigada contra vulnerabilidades de *Path Traversal (Zip Slip)*.
-* **Arquitectura de Alto Rendimiento**: Empleo de `QgsSpatialIndex` en memoria y conversiones eficientes de PBF a *GeoPackage* (GPKG) empleando motores `GDAL` subyacentes nativos de QGIS. Ninguna librería externa como `osmium` es necesaria.
+## Antes de empezar
 
-## 🛠 Instalación y Uso
-1. Instala el plugin desde el repositorio o clonando esta carpeta dentro de tu directorio de *plugins* de QGIS.
-2. Abre la herramienta desde el menú vectorial o barra de herramientas de QGIS.
-3. El Wizard consta de 3 pasos:
-   * **Paso 1**: Sube tu archivo CSV/XLSX e indica las columnas que contienen la *Dirección* y (opcionalmente) la *Comuna*.
-   * **Paso 2**: El plugin te informará si requiere descargar los datos base. Si es primera vez, haz clic en el botón de descarga.
-   * **Paso 3**: Revisa tu configuración y presiona "Geocodificar". ¡Listo! Se generará una nueva capa de puntos.
+| Necesitas | Para qué |
+| :--- | :--- |
+| QGIS y el plugin instalado | Ejecutar el asistente y visualizar la capa de salida |
+| CSV/XLSX con dirección y comuna | Identificar la calle dentro de su comuna; el motor necesita ambos datos para buscar en el Maestro |
+| Datos base del Maestro de Calles | Interpolar o localizar el segmento vial |
+| Conexión para la descarga inicial | Obtener los datos base desde el gestor integrado |
 
-## 💼 Arquitectura "Clean" (Para Desarrolladores)
-El código fue diseñado modularmente siguiendo estrictas convenciones de diseño y estándares "Elite Pragmatic":
-* `core/`: Contiene `address_parser`, `interpolator`, `matcher`, y manejo paralelo.
-* `io/`: Maneja I/O de CSV/Excel.
-* `ui/`: Implementa las vistas en Qt puro mediante clases en capas separadas para fácil mantención.
+**Procesamiento local no significa instalación sin conexión.** El gestor descarga los datos y los conserva en `geocallejero_data`, dentro del perfil de QGIS. Una vez disponibles, el motor trabaja con las fuentes locales. Esto no constituye una garantía general de privacidad o seguridad de todo el entorno QGIS.
 
-## 📄 Licencia
-Este proyecto es código abierto. Los resultados derivados de OSM mantienen su debida licencia ODbL a nivel de metadata.
+## Instalación
+
+1. Descarga o clona este repositorio.
+2. Copia la carpeta interna [`geocallejero/`](geocallejero/) —la que contiene `metadata.txt` y `__init__.py`— al directorio de plugins del perfil de QGIS. No copies el repositorio completo como si fuera el plugin.
+3. Reinicia QGIS y activa **Geocallejero CL** desde el administrador de complementos.
+4. Abre **Geocallejero CL** desde el menú de complementos o su icono en la barra de herramientas.
+
+## Primer uso
+
+| Paso | Acción | Qué revisar |
+| :--- | :--- | :--- |
+| **1 · Datos** | Selecciona el CSV/XLSX y asigna las columnas de dirección, comuna e identificador | Que la comuna esté informada y las direcciones sean reconocibles |
+| **2 · Fuentes** | Descarga los datos base si todavía no están disponibles | Que el Maestro de Calles se haya cargado correctamente |
+| **3 · Ejecución** | Revisa la configuración y pulsa **Geocodificar** | La tabla de resultados, su fuente y su puntuación |
+
+Al terminar, el plugin intenta añadir la capa **`geocallejero_resultados`** al proyecto. Revisa los resultados antes de usarlos en un análisis o exportarlos.
+
+## Alcance y resultados
+
+El motor normaliza abreviaturas como `Av.`, `Pje.` y `N°`, busca candidatos de calle y aplica la siguiente estrategia:
+
+| Método | Estado actual | Interpretación |
+| :--- | :--- | :--- |
+| **Maestro · interpolación** | Implementado | Estima la posición con rangos de numeración y paridad; no equivale a una ubicación predial verificada |
+| **OSM · dirección exacta** | Pendiente de integración en el matcher | Existe infraestructura de carga/caché PBF/GPKG, pero no debe asumirse que este nivel resuelva direcciones |
+| **Maestro · centroide** | Implementado como alternativa | Asigna el centroide del segmento candidato; no la ubicación exacta del domicilio |
+| **Sin coincidencia** | Resultado posible | Una calle no encontrada, datos incompletos o errores pueden dejar el registro sin geometría |
+
+La salida incluye `gc_source`, `gc_score`, `gc_lat` y `gc_lon`, además de la dirección original y sus campos normalizados. **El score es una heurística del motor, no una probabilidad calibrada de acierto.** Prioriza la revisión de centroides, coincidencias aproximadas y registros `sin_match`.
+
+## Desarrollo
+
+El procesamiento utiliza tareas `QgsTask` con señales de progreso. La integración geoespacial se apoya en la API de QGIS y en GDAL para la preparación de fuentes OSM.
+
+| Carpeta | Responsabilidad |
+| :--- | :--- |
+| [`geocallejero/core/`](geocallejero/core/) | Normalización, búsqueda de calles, interpolación, descarga y procesamiento |
+| [`geocallejero/io/`](geocallejero/io/) | Lectura de archivos y escritura de resultados |
+| [`geocallejero/ui/`](geocallejero/ui/) | Asistente de tres pasos en Qt |
+| [`geocallejero/tests/`](geocallejero/tests/) | Pruebas del proyecto |
+
+Para reportar un problema, abre un [issue](https://github.com/geoidegeoidal/geocallejero/issues) con tu versión de QGIS y un ejemplo anonimizado. No publiques direcciones personales ni archivos sensibles.
+
+## Autoría y licencia
+
+Creado por **Jorge Ulloa Roa** · [jorge.ulloa.roa@gmail.com](mailto:jorge.ulloa.roa@gmail.com).
+
+El código incluye la [GNU GPL v3](LICENSE). Los datos utilizados conservan sus licencias y atribuciones propias; para OpenStreetMap corresponde considerar la ODbL.
