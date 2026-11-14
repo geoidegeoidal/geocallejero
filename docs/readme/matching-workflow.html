@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geocallejero CL · Flujo de coincidencias</title>
+  <style>
+    body { margin: 0; background: #ffffff; }
+    main { max-width: 960px; margin: 0 auto; }
+    svg { display: block; width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+<main>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600" role="img" aria-labelledby="workflow-title workflow-desc">
+  <title id="workflow-title">De una dirección a un resultado que revisar</title>
+  <desc id="workflow-desc">Dirección y comuna se normalizan y buscan en el Maestro de Calles. El resultado puede ser una interpolación, un centroide de segmento o un registro sin coincidencia. Todos requieren revisión en QGIS. OSM exacto está pendiente; el score no es una probabilidad.</desc>
+  <!-- Paleta: geocallejero/icon.svg. Qt no declara familia general: fallback local Segoe UI/system-ui, sin fuentes externas. -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#1a5276"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#f39c12"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#1a5276"/>
+    </marker>
+    <style>
+      text { font-family: 'Segoe UI', system-ui, sans-serif; fill: #1a5276; }
+      .label { font-size: 24px; font-weight: 600; }
+      .detail { font-size: 20px; }
+      .connection { fill: none; stroke: #1a5276; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="960" height="600" fill="#ffffff"/>
+  <rect x="48" y="40" width="48" height="8" fill="#f39c12"/>
+  <text x="48" y="92" font-size="32" font-weight="700">De la dirección a la revisión</text>
+
+  <path class="connection" d="M 328 192 H 384"/>
+  <path class="connection" d="M 448 240 V 260 Q 448 268 440 268 H 192 Q 184 268 184 276 V 304"/>
+  <path class="connection" d="M 608 240 V 272 Q 608 280 600 280 H 496 Q 488 280 488 288 V 304"/>
+  <path class="connection" d="M 784 240 V 304"/>
+  <path class="connection" d="M 184 416 V 456"/>
+  <path class="connection" d="M 488 416 V 456"/>
+  <path class="connection" d="M 784 416 V 456"/>
+
+  <rect x="48" y="144" width="280" height="96" rx="8" fill="#f3f7fa" stroke="#1a5276" stroke-width="2"/>
+  <text x="72" y="184" class="label">Dirección + comuna</text>
+  <text x="72" y="216" class="detail">Listado CSV / XLSX</text>
+
+  <rect x="384" y="144" width="528" height="96" rx="8" fill="#1a5276"/>
+  <text x="408" y="184" class="label" style="fill: #ffffff">Normalizar y buscar la calle</text>
+  <text x="408" y="216" class="detail" style="fill: #ffffff">Maestro de Calles · datos locales</text>
+
+  <rect x="48" y="304" width="272" height="112" rx="8" fill="#ffffff" stroke="#1a5276" stroke-width="2"/>
+  <text x="72" y="340" class="label">Interpolación</text>
+  <text x="72" y="372" class="detail">Posición estimada por</text>
+  <text x="72" y="400" class="detail">rangos y paridad</text>
+
+  <rect x="352" y="304" width="272" height="112" rx="8" fill="#ffffff" stroke="#1a5276" stroke-width="2"/>
+  <text x="376" y="340" class="label">Centroide</text>
+  <text x="376" y="372" class="detail">Alternativa: centro</text>
+  <text x="376" y="400" class="detail">del segmento vial</text>
+
+  <rect x="656" y="304" width="256" height="112" rx="8" fill="#f3f7fa" stroke="#1a5276" stroke-width="2" stroke-dasharray="8 4"/>
+  <text x="680" y="340" class="label">Sin coincidencia</text>
+  <text x="680" y="372" class="detail">Registro sin geometría</text>
+  <text x="680" y="400" class="detail">sin_match</text>
+
+  <rect x="48" y="456" width="864" height="72" rx="8" fill="#fff5e3" stroke="#f39c12" stroke-width="2"/>
+  <text x="72" y="488" class="label">Revisión humana en QGIS</text>
+  <text x="72" y="516" class="detail">Comprobar fuente, score y geometría antes de usar los resultados.</text>
+  <text x="48" y="568" class="detail">OSM exacto: pendiente. El score no es una probabilidad de acierto.</text>
+</svg>
+</main>
+</body>
+</html>
